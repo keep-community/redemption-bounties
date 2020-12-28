@@ -1,0 +1,1 @@
+export const timeLockDelay = 3 * 24 * 3600; // 3 days
