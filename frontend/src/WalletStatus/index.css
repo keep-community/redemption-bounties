@@ -1,0 +1,12 @@
+.accountStatus{
+    position:fixed;
+    top:1em;
+    right:1em;
+    display: flex;
+    flex-direction: row;
+    align-items: center
+}
+
+.accountStatus > * {
+    margin-left:1em
+}

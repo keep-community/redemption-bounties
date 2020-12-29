@@ -1,0 +1,13 @@
+.farmer-image {
+    height: 40vmin;
+    pointer-events: none;
+  }
+
+  #footer {
+    position:absolute;
+    height: 40vmin;
+    bottom:0px;
+    right:25%;
+    left:50%;
+    margin-left:-20vmin;
+}
