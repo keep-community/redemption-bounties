@@ -1,5 +1,13 @@
-# KEEP Collateral
-> Incentivized tBTC redemptions for undercollateralized deposits
+<h1 align="center">
+  Redemption Bounties
+  <br>
+</h1>
+
+<h4 align="center">
+    Incentivized tBTC redemptions for undercollateralized deposits.<br>
+    Check it out on <a href="https://redeem.finance/" target="_blank">redeem.finance</a>!<br>
+    <img src="https://github.com/keep-community/redemption-bounties/raw/master/frontend/src/images/bounty-farmer.png" width="256">
+</h4>
 
 ## Concept
 This service allows stakers to set rewards for redeeming deposits that have a collateralization ratio lower than one chosen by the staker, thus simplifying operations and removing the need to actively manage deposits.
