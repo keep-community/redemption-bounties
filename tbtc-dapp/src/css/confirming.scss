@@ -1,0 +1,17 @@
+.confirming {
+    .page-body {
+        .description {
+            .error {
+                margin-top: 20px;
+                color: #{$alert};
+            }
+
+            a {
+                @extend .button;
+                @extend .button.black;
+                display: inline-block;
+                margin-top: 1em;
+            }
+        }
+    }
+}
