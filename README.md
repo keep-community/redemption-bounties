@@ -29,7 +29,7 @@ Eventually our plan is to set to the governance address to 0 and thus disable up
 
 ## Forks
 - `Timelock.sol` and `SafeMath.sol` have been forked from Compound without any changes.
-- `tbtc-dapp` is a fork of [keep-network/tbtc-dapp](https://github.com/keep-network/tbtc-dapp) with some changes (see commits for a list of them).
+- The redemption dApp on [dapp.redeem.finance](https://dapp.redeem.finance) is [a fork of keep-network/tbtc-dapp](https://github.com/keep-community/tbtc-dapp) with some changes (see commits for a list of them).
 
 ## Risks
 - The contract could have a vulnerability and get hacked
