@@ -77,13 +77,15 @@ This architecture solves all the problems mentioned before and keeps gas consump
 ## Usage
 ```bash
 # Contracts
+cd contracts
 npm run compile # Compile contracts
 npm run deploy # Deploy
 npm test # Run tests
-```
-<!--
+
 # Frontend (typical CRA commands)
+cd frontend
 npm start # Start local dev server
+npm test # Run tests
 npm run build # Build production bundle
 ```
--->
+
