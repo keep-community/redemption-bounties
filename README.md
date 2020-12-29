@@ -28,7 +28,8 @@ So, in order to prevent situations where redeemers can't be made whole because o
 Eventually our plan is to set to the governance address to 0 and thus disable upgrades. We will do this once we feel confident enough in our job or in the case that users express a preference for this over the safety net provided by upgradeability.
 
 ## Forks
-`Timelock.sol` and `SafeMath.sol` have been forked from Compound without any changes.
+- `Timelock.sol` and `SafeMath.sol` have been forked from Compound without any changes.
+- `tbtc-dapp` is a fork of [keep-network/tbtc-dapp](https://github.com/keep-network/tbtc-dapp) with some changes (see commits for a list of them).
 
 ## Risks
 - The contract could have a vulnerability and get hacked
