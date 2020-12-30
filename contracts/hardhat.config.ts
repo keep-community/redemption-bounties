@@ -1,4 +1,5 @@
 import { task } from "hardhat/config";
+import type { HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-waffle";
 import '@openzeppelin/hardhat-upgrades';
 import "@nomiclabs/hardhat-etherscan";
@@ -14,7 +15,7 @@ task("accounts", "Prints the list of accounts", async (args, hre) => {
   }
 });
 
-export default {
+const config:HardhatUserConfig = {
   solidity: "0.5.17",
   // https://hardhat.org/plugins/nomiclabs-hardhat-etherscan.html
   etherscan: {
@@ -22,4 +23,6 @@ export default {
     apiKey: process.env["ETHERSCAN_API_KEY"]
   }
 };
+
+export default config;
 

@@ -36,12 +36,12 @@ contract Collateral is Initializable {
 
     event RedemptionRewardDispensed(uint rewarderIndex, address redeemer, uint rewardAmount);
 
-    // Address are passed in to allow for mocks to be used during testing
-    function initialize(address keepTokenAddress) public initializer {
-        keepToken = IERC20(keepTokenAddress);
-        tbtcToken = IERC20(0x8dAEBADE922dF735c38C80C7eBD708Af50815fAa);
-        vendingMachine = VendingMachine(0x526c08E5532A9308b3fb33b7968eF78a5005d2AC);
-        tbtcDepositToken = TBTCDepositToken(0x10B66Bd1e3b5a936B7f8Dbc5976004311037Cdf0);
+    // Addresses are passed in to allow for mocks to be used during testing
+    function initialize(address _keepTokenAddress, address _tbtcTokenAddress, address _vendingMachineAddress, address _tbtcDepositTokenAddress) public initializer {
+        keepToken = IERC20(_keepTokenAddress);
+        tbtcToken = IERC20(_tbtcTokenAddress);
+        vendingMachine = VendingMachine(_vendingMachineAddress);
+        tbtcDepositToken = TBTCDepositToken(_tbtcDepositTokenAddress);
     }
 
     // REWARDER functions
@@ -86,7 +86,7 @@ contract Collateral is Initializable {
         OperatorRewarder storage rewarder = getRewarder(_rewarderIndex);
         // No need to check if there's enough balance since otherwise the next operation will underflow and revert the tx
         rewarder.keepBalance = rewarder.keepBalance.sub(_keepToWithdraw);
-        keepToken.transferFrom(address(this), msg.sender, _keepToWithdraw);
+        keepToken.transfer(msg.sender, _keepToWithdraw);
     }
 
     function setMinimumCollateralizationPercentage(uint _rewarderIndex, uint _newMinimumCollateralizationPercentage) external {
@@ -149,7 +149,7 @@ contract Collateral is Initializable {
             // Prevent attack where the same reward is withdrawn twice
             require(rewarderIndex.add(1) > prevRewarderIndex, "rewarderIndexes must be strictly increasing");
             OperatorRewarder storage rewarder = rewarders[rewarderIndex];
-            require(rewarder.minimumCollateralizationPercentage <= collateralizationPercentage, "Minimum collateralization percentage for rewarder not reached");
+            require(collateralizationPercentage <= rewarder.minimumCollateralizationPercentage, "Minimum collateralization percentage for rewarder not reached");
             require(rewarder.operator == keepMembers[memberIndex], "Rewarder operator doesn't match keep member");
             uint keepReward = rewarder.keepRewardPerRedemptionLotSize[depositLotSize];
             if(keepReward <= rewarder.keepBalance){ // Avoid griefing by the rewarders (they could front-run the redeemer and set a high keepReward that reverts the tx)
@@ -161,7 +161,7 @@ contract Collateral is Initializable {
             prevRewarderIndex = rewarderIndex.add(1); // +1 to handle the case of the first array element 
         }
         keepToken.transfer(msg.sender, totalKeepToSend);
-        require(totalKeepToSend >= minimumKEEPReward, "The minimum KEEP reward is not high enough"); // Prevent front-running from the stakers
+        require(totalKeepToSend >= minimumKEEPReward, "KEEP reward does not reach minimum"); // Prevent front-running from the rewarders
 
         // Store the redeemer in case there's an issue with redemption and coins need to be recovered
         redeemers[_depositToRedeem] = msg.sender;
