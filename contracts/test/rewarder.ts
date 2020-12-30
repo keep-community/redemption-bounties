@@ -112,12 +112,14 @@ describe('Collateral', () => {
         expect(await tbtcToken.balanceOf(redeemer.address)).to.equal(TOTAL_TBTC_TOKENS-TBTC_REDEMPTION_REQUIREMENT)
         expect((await collateral.rewarders(0)).keepBalance).to.equal(500-REWARD)
     })
-    it("redeem fails when collateralization percentage is not lower than the one set by rewarder", async()=>{
-        const {collateral, redeemer, mockDeposit} = await setup()
+    it("redeem skips rewards when collateralization percentage is not lower than the one set by rewarder (protection against griefing)", async()=>{
+        const {collateral, redeemer, mockDeposit, keepToken} = await setup()
         await collateral.addRewarder(OPERATOR_ADDRESS, 500, [SAMPLE_LOT_SIZE, 20], 128);
         await collateral.addRewarder(SECOND_OPERATOR_ADDRESS, 300, [SAMPLE_LOT_SIZE, 40], 140);
-        await expect(collateral.connect(redeemer).redeem(mockDeposit.address, SAMPLE_OUTPUT_SCRIPT, SAMPLE_OUTPUT_VALUE_BYTES, [0, 1], 0)).to.be.revertedWith("Minimum collateralization percentage for rewarder not reached")
-        await collateral.connect(redeemer).redeem(mockDeposit.address, SAMPLE_OUTPUT_SCRIPT, SAMPLE_OUTPUT_VALUE_BYTES, [1, 2], 30);
+        await collateral.connect(redeemer).redeem(mockDeposit.address, SAMPLE_OUTPUT_SCRIPT, SAMPLE_OUTPUT_VALUE_BYTES, [0, 1, 1, 2], 30)
+        expect(await keepToken.balanceOf(redeemer.address)).to.equal(40)
+        await collateral.connect(redeemer).redeem(mockDeposit.address, SAMPLE_OUTPUT_SCRIPT, SAMPLE_OUTPUT_VALUE_BYTES, [0, 1], 0);
+        expect(await keepToken.balanceOf(redeemer.address)).to.equal(40)
     })
     it("is possible to claim rewards from multiple rewarders for a single redemption", async () => {
         const {collateral, redeemer, mockDeposit, keepToken, owner} = await setup()
@@ -153,5 +155,14 @@ describe('Collateral', () => {
         const {collateral, redeemer, mockDeposit} = await setup()
         await collateral.addRewarder(redeemer.address, 300, [SAMPLE_LOT_SIZE, 300], 137);
         await expect(collateral.connect(redeemer).redeem(mockDeposit.address, SAMPLE_OUTPUT_SCRIPT, SAMPLE_OUTPUT_VALUE_BYTES, [0, 1], 0)).to.be.revertedWith("Rewarder operator doesn't match keep member")
+    })
+    it("multiple redeems work fine (there are no issues with approve calls)", async()=>{
+        const {collateral, owner, mockDeposit, tbtcToken} = await setup()
+        await tbtcToken.mint(owner.address, 2000)
+        await tbtcToken.approve(collateral.address, 2000)
+        await collateral.addRewarder(SECOND_OPERATOR_ADDRESS, 300, [SAMPLE_LOT_SIZE, 20], 137);
+        for(let i=0; i<10; i++){
+            await collateral.redeem(mockDeposit.address, SAMPLE_OUTPUT_SCRIPT, SAMPLE_OUTPUT_VALUE_BYTES, [0, 2], 0)
+        }
     })
 })

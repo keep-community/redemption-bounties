@@ -129,7 +129,7 @@ contract Collateral is Initializable {
         vendingMachine.tbtcToBtc(_depositToRedeem, _outputValueBytes, _redeemerOutputScript);
         
         // Redemption successful, let's distribute the rewards
-        // Deposits that have been redeemed don't track it's collateralizationPercentage (return 0), but this one just entered redemption so it will return properly
+        // Deposits that have been redeemed don't track it's collateralizationPercentage (return 0), but this one just entered redemption so it will be returned properly
         uint256 collateralizationPercentage = _d.collateralizationPercentage();
 
         BondedECDSAKeep associatedKeep = BondedECDSAKeep(_d.keepAddress());
@@ -138,27 +138,26 @@ contract Collateral is Initializable {
         uint depositLotSize = _d.lotSizeTbtc();
 
         // There's no need to check that associatedRewarders has an even amount of items because otherwise the array bounds check inside will fail
-        // This is possible because right now solidity doesn't optimize bounds checks inside range loops, but in the future it might do so
-        // and, while this specific loop shouldn't get optimized, if it does it could become problematic
+        // This is possible because right now solidity doesn't optimize bounds checks inside range loops, but in the future it might be possible to do so
+        // This optimization must not be applied here though
         // See https://github.com/ethereum/solidity/issues/9117
         uint totalKeepToSend = 0;
-        uint prevRewarderIndex = 0;
+        uint previousRewarderIndex = 0;
         for (uint i=0; i<associatedRewarders.length; i+=2) {
             uint rewarderIndex = associatedRewarders[i];
             uint memberIndex = associatedRewarders[i + 1];
             // Prevent attack where the same reward is withdrawn twice
-            require(rewarderIndex.add(1) > prevRewarderIndex, "rewarderIndexes must be strictly increasing");
+            require(rewarderIndex.add(1) > previousRewarderIndex, "rewarderIndexes must be strictly increasing");
             OperatorRewarder storage rewarder = rewarders[rewarderIndex];
-            require(collateralizationPercentage <= rewarder.minimumCollateralizationPercentage, "Minimum collateralization percentage for rewarder not reached");
             require(rewarder.operator == keepMembers[memberIndex], "Rewarder operator doesn't match keep member");
             uint keepReward = rewarder.keepRewardPerRedemptionLotSize[depositLotSize];
-            if(keepReward <= rewarder.keepBalance){ // Avoid griefing by the rewarders (they could front-run the redeemer and set a high keepReward that reverts the tx)
+            if(keepReward <= rewarder.keepBalance && collateralizationPercentage <= rewarder.minimumCollateralizationPercentage){ // Avoid griefing by the rewarders (they could front-run the redeemer and change parameters to force a revert)
                 rewarder.keepBalance = rewarder.keepBalance.sub(keepReward);
                 totalKeepToSend = totalKeepToSend.add(keepReward);
                 // Emit an event to make rewarder balance changes easier to track
                 emit RedemptionRewardDispensed(rewarderIndex, msg.sender, keepReward);
             }
-            prevRewarderIndex = rewarderIndex.add(1); // +1 to handle the case of the first array element 
+            previousRewarderIndex = rewarderIndex.add(1); // +1 to handle the case of the first array element
         }
         keepToken.transfer(msg.sender, totalKeepToSend);
         require(totalKeepToSend >= minimumKEEPReward, "KEEP reward does not reach minimum"); // Prevent front-running from the rewarders
@@ -169,7 +168,7 @@ contract Collateral is Initializable {
 
     function withdrawETHAfterFraudLiquidation(address payable  _depositToWithdrawFrom) external {
         // By using data from previous redemption data we're making sure that the deposit is a real one, no need to check that again.
-        require(redeemers[_depositToWithdrawFrom] == msg.sender, "The deposit address provided hasn't been processed with this contract before or it has been processed with a different account");
+        require(redeemers[_depositToWithdrawFrom] == msg.sender, "The deposit address provided hasn't been processed with this contract before or it has been processed through a different account");
         redeemers[_depositToWithdrawFrom] = address(0);
         Deposit deposit = Deposit(_depositToWithdrawFrom);
         uint256 withdrawableAmount = deposit.withdrawableAmount();
@@ -179,14 +178,14 @@ contract Collateral is Initializable {
 
     function withdrawTBTCAfterLiquidation(address payable  _depositToWithdrawFrom) external {
         // See comment on withdrawETHAfterFraudLiquidation()
-        require(redeemers[_depositToWithdrawFrom] == msg.sender, "The deposit address provided hasn't been processed with this contract before or it has been processed with a different account");
+        require(redeemers[_depositToWithdrawFrom] == msg.sender, "The deposit address provided hasn't been processed with this contract before or it has been processed through a different account");
         // Clear info to prevent multiple withdrawals of the same tbtc
         redeemers[_depositToWithdrawFrom] = address(0);
         Deposit deposit = Deposit(_depositToWithdrawFrom);
         // Make sure redemption has actually failed
         require(deposit.currentState() == uint8(DepositStates.States.LIQUIDATED), "Deposit hasn't been liquidated");
         // Make sure there was no fraud on the liquidation (in this case we'd get ETH instead of tBTC)
-        require(deposit.withdrawableAmount() == 0, "Deposit was no liquidated with fraud");
+        require(deposit.withdrawableAmount() == 0, "Deposit was liquidated with fraud");
         uint256 lotSizeTbtc = deposit.lotSizeTbtc();
         tbtcToken.transfer(msg.sender, lotSizeTbtc);
     }

@@ -48,7 +48,7 @@ Stakers can front-run redeemers and cheat them out of their rewards by identifyi
 
 This attack is defended against by allowing redeemers to request a minimum amount of rewards, which prevents manipulation of them (otherwise the redemption transaction would fail) at the cost of increasing the chances of a failed transaction due to non-malicious reasons (eg: if a signer runs out of rewards before the transaction is mined, it will cause it to fail although the redeemer may be happy to only take the rewards from the other two signers).
 
-Another possible solution would be to make withdrawals go through a timelocked 2-step process, but this would worsen the staker UX so for now it's not implemented.
+Another possible solution would be to make all staker operations go through a timelocked 2-step process, but this would worsen the staker UX so for now it's not implemented.
 
 ## Alternative architectures
 During initial discussions these two other proposals came up:
