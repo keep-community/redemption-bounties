@@ -4,7 +4,7 @@
 </h1>
 
 <h4 align="center">
-    Incentivized tBTC redemptions for undercollateralized deposits.<br>
+    Incentivized tBTC redemptions for undercollateralized deposits<br>
     Check it out on <a href="https://redeem.finance/" target="_blank">redeem.finance</a>!<br>
     <img src="https://github.com/keep-community/redemption-bounties/raw/master/frontend/src/images/bounty-farmer.png" width="256">
 </h4>
