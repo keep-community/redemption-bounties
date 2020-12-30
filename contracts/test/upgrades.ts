@@ -8,7 +8,7 @@ import constructUpgradeTransaction from '../scripts/constructUpgradeTransaction'
 
 async function setup() {
     const [_owner, addr1, addr2] = await ethers.getSigners();
-    const { contract, timelock } = await deployWithTimelockedProxy("Collateral", addr1.address, timeLockDelay, []);
+    const { contract, timelock } = await deployWithTimelockedProxy(addr1.address);
     return {
         timelock,
         collateral: contract,

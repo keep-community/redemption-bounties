@@ -8,7 +8,7 @@ const adminAddress = "0x..."
 async function main() {
   await hre.run('compile');
 
-  const {contract, timelock} = await deployWithTimelockedProxy("Collateral", adminAddress, timeLockDelay, [])
+  const {contract, timelock} = await deployWithTimelockedProxy(adminAddress)
   console.log(`Collateral deployed to ${contract.address} and timelock/owner to ${timelock.address}`);
 }
 
