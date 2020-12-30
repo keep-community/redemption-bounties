@@ -30,10 +30,15 @@ contract Collateral is Initializable {
     OperatorRewarder[] public rewarders;
     mapping (address => address) public redeemers;
 
+    // Indexed event params heavily increase gas costs (multiplier is 375 vs 8 for unindexed)
+    // In this case this results in an increase of ~15000 gas, but this event should only be used for creation of new rewarders (rare) so it's fine
     event NewRewarderCreated(uint indexed rewarderIndex, address indexed owner, address indexed operator, uint keepBalance, uint[] keepRewardPerRedemptionLotSize, uint minimumCollateralizationPercentage);
 
-    function initialize() public initializer {
-        keepToken = IERC20(0x85Eee30c52B0b379b046Fb0F85F4f3Dc3009aFEC);
+    event RedemptionRewardDispensed(uint rewarderIndex, address redeemer, uint rewardAmount);
+
+    // Address are passed in to allow for mocks to be used during testing
+    function initialize(address keepTokenAddress) public initializer {
+        keepToken = IERC20(keepTokenAddress);
         tbtcToken = IERC20(0x8dAEBADE922dF735c38C80C7eBD708Af50815fAa);
         vendingMachine = VendingMachine(0x526c08E5532A9308b3fb33b7968eF78a5005d2AC);
         tbtcDepositToken = TBTCDepositToken(0x10B66Bd1e3b5a936B7f8Dbc5976004311037Cdf0);
@@ -94,9 +99,18 @@ contract Collateral is Initializable {
         setRedemptionRewards(rewarder, _keepRewardPerRedemptionLotSize);
     }
 
+    function getKeepRewardPerRedemptionLotSize(uint _rewarderIndex, uint _lotSize) view external returns (uint) {
+        return rewarders[_rewarderIndex].keepRewardPerRedemptionLotSize[_lotSize]; // Returns 0 if it hasn't been set
+    }
+
+    function getRewardersLength() view external returns (uint) {
+        return rewarders.length;
+    }
+
     // REDEEMER functions
     // not external to allow bytes memory parameters
     // associatedRewarders is to be formatted like [rewarderIndex, rewarder in Keep's member array, rewarderIndex 2,...]
+    // where the rewarderIndex subsequence is strictly increasing
     function redeem(address payable _depositToRedeem, bytes8 _outputValueBytes, bytes memory _redeemerOutputScript, uint[] memory associatedRewarders, uint minimumKEEPReward) public {
         // We cannot rely on VendingMachine reverts to make sure that the correct amount of tBTC has been sent because this contract may own tBTC that were sent from unrelated liquidations
         // Thus we need to request the exact amount of tBTC used in the redemption
@@ -128,9 +142,12 @@ contract Collateral is Initializable {
         // and, while this specific loop shouldn't get optimized, if it does it could become problematic
         // See https://github.com/ethereum/solidity/issues/9117
         uint totalKeepToSend = 0;
+        uint prevRewarderIndex = 0;
         for (uint i=0; i<associatedRewarders.length; i+=2) {
             uint rewarderIndex = associatedRewarders[i];
             uint memberIndex = associatedRewarders[i + 1];
+            // Prevent attack where the same reward is withdrawn twice
+            require(rewarderIndex.add(1) > prevRewarderIndex, "rewarderIndexes must be strictly increasing");
             OperatorRewarder storage rewarder = rewarders[rewarderIndex];
             require(rewarder.minimumCollateralizationPercentage <= collateralizationPercentage, "Minimum collateralization percentage for rewarder not reached");
             require(rewarder.operator == keepMembers[memberIndex], "Rewarder operator doesn't match keep member");
@@ -138,7 +155,10 @@ contract Collateral is Initializable {
             if(keepReward <= rewarder.keepBalance){ // Avoid griefing by the rewarders (they could front-run the redeemer and set a high keepReward that reverts the tx)
                 rewarder.keepBalance = rewarder.keepBalance.sub(keepReward);
                 totalKeepToSend = totalKeepToSend.add(keepReward);
+                // Emit an event to make rewarder balance changes easier to track
+                emit RedemptionRewardDispensed(rewarderIndex, msg.sender, keepReward);
             }
+            prevRewarderIndex = rewarderIndex.add(1); // +1 to handle the case of the first array element 
         }
         keepToken.transfer(msg.sender, totalKeepToSend);
         require(totalKeepToSend >= minimumKEEPReward, "The minimum KEEP reward is not high enough"); // Prevent front-running from the stakers
