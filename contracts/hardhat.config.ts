@@ -15,12 +15,20 @@ task("accounts", "Prints the list of accounts", async (args, hre) => {
   }
 });
 
-const config:HardhatUserConfig = {
+const config: HardhatUserConfig = {
   solidity: "0.5.17",
   // https://hardhat.org/plugins/nomiclabs-hardhat-etherscan.html
   etherscan: {
     // Your API key for Etherscan
     apiKey: process.env["ETHERSCAN_API_KEY"]
+  },
+  networks: {
+    ropsten: {
+      accounts: {
+        mnemonic: process.env.MNEMONIC!
+      },
+      url: `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`
+    }
   }
 };
 

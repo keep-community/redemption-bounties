@@ -14,7 +14,9 @@ This service allows stakers to set rewards for redeeming deposits that have a co
 
 For example, a staker could provide a reward of 5k KEEP for redeeming 10 tBTC deposits that have a c-ration lower than 135%, making it possible to other parties to claim this by redeeming the deposit through our contract.
 
-## Protocol actors
+## Detailed explanation
+Stakers can set up redemption bounties by locking some KEEP inside the contract and setting a minimum collateralization threshold:
+
 ### Stakers
 - Can top up or withdraw their reward balances any time
 - Set a minimum collateralization rate
@@ -89,3 +91,9 @@ npm test # Run tests
 npm run build # Build production bundle
 ```
 
+## Ropsten deployment
+```
+Contract: 0x64A0619cB91D80942bF06D190bA3504e497acc00 
+Timelock: 0x257734A20D94C4557E3D7Afe8b84c3625bC8C9e0
+Deployer: 0xda5ef3c5A4a87adFfdECeDd9a9A676FB206325aD
+```
