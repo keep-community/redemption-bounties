@@ -25,7 +25,7 @@ const config: HardhatUserConfig = {
   networks: {
     ropsten: {
       accounts: {
-        mnemonic: process.env.MNEMONIC!
+        mnemonic: process.env.MNEMONIC ?? ""
       },
       url: `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`
     }
