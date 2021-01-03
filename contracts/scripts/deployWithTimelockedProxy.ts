@@ -16,9 +16,10 @@ export default async function deployWithTimelockedProxy(
     await contract.deployed();
 
     const Timelock = await ethers.getContractFactory("Timelock");
-    const timelock: Contract = await Timelock.deploy(adminAddress, timelockSeconds);
+    const timelockConstructorParameters = [adminAddress, timelockSeconds]
+    const timelock: Contract = await Timelock.deploy(...timelockConstructorParameters);
     await timelock.deployed();
 
     await upgrades.admin.changeProxyAdmin(contract.address, timelock.address);
-    return { contract, timelock }
+    return { contract, timelock, timelockConstructorParameters }
 }
