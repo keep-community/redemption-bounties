@@ -35,7 +35,9 @@ We don't have any plans to upgrade the contract to newer versions, the only reas
 
 So, in order to prevent situations where redeemers can't be made whole because of stuck tokens, we've set up this upgrade mechanism, meant to be used as an emergency mechanism to recover stuck balances.
 
-Eventually our plan is to set to the governance address to 0 and thus disable upgrades. We will do this once we feel confident enough in our job or in the case that users express a preference for this over the safety net provided by upgradeability.
+Eventually our plan is to set to the governance address to 0x0 and thus disable upgrades. We will do this once we feel confident enough in our job or in the case that users express a preference for this over the safety net provided by upgradeability.
+
+This will be controlled through a 3/4 multisig made of community members.
 
 ## Forks
 - `Timelock.sol` and `SafeMath.sol` have been forked from Compound without any changes.
